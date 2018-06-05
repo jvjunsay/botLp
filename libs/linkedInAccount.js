@@ -21,6 +21,8 @@ class LinkedInAccounts {
         .build()
     }
 
+    // this._driver.quit()
+
     this._driver.get('https://www.linkedin.com')
     await this._driver.wait(webdriver.until.elementLocated({id: 'login-email'}), 20000).then
     this._driver.findElement(webdriver.By.id('login-email')).clear()
@@ -55,7 +57,7 @@ class LinkedInAccounts {
   }
 
   async searchByKeyWord (body) {
-    let { keyword, count = 10, firstName = '', lastName = '', title = '', company = '', school = '', location = '' } = body
+    let { keyword, count = 10, firstName = '', lastName = '', title = '', company = '', school = '' } = body
     let pages = Math.round(count / 10)
     let data = []
     // _driver.getPageSource().then(s => {
@@ -120,6 +122,11 @@ class LinkedInAccounts {
       success: true,
       data: data
     }
+  }
+
+  async getCookies () {
+    let cookies = await this._driver.manage().getCookies()
+    return cookies
   }
 
   async scrapeResults (pages, data) {
