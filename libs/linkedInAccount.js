@@ -1,19 +1,30 @@
 const common = require('./common')
 const webdriver = require('selenium-webdriver')
-const proxy = require('selenium-webdriver/proxy')
+const proxy = require('selenium-webdriver/lib/proxy')
 
 class LinkedInAccounts {
   constructor () {
-    this._driver = {}
+    this._driver = null
   }
 
   async logIn (body) {
     let { username, password, httpProxy } = body
+    if (this._driver !== null) this._driver.close()
 
     if (httpProxy !== '') {
+      // let capabilities = new Capabilities(webdriver.Capabilities.chrome())
+      // capabilities.setProxy(proxy.socks('davidonly:davidonly@173.44.226.185:80'))
+      let capabilities = webdriver.Capabilities.chrome()
+      // capabilities.set('chromeOptions', {
+      //   'args': ['--proxy-server=http://davidonly:davidonly@173.44.226.185:80']
+      // })
       this._driver = new webdriver.Builder()
-        .forBrowser('chrome')
-        .setProxy(proxy.manual({http: httpProxy}))
+        .withCapabilities(capabilities)
+        .setProxy(proxy.manual({
+          http: 'davidonly:davidonly@173.44.226.185:80',
+          bypass: 'davidonly:davidonly@173.44.226.185:80'
+          
+        }))
         .build()
     } else {
       this._driver = new webdriver.Builder()
@@ -23,7 +34,7 @@ class LinkedInAccounts {
 
     // this._driver.quit()
 
-    this._driver.get('https://www.linkedin.com')
+    this._driver.get('http://www.showmyip.gr')
     await this._driver.wait(webdriver.until.elementLocated({id: 'login-email'}), 20000).then
     this._driver.findElement(webdriver.By.id('login-email')).clear()
     this._driver.findElement(webdriver.By.id('login-password')).clear()
