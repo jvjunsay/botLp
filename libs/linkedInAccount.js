@@ -10,7 +10,6 @@ class LinkedInAccounts {
   async logIn (body) {
     let { username, password, httpProxy } = body
     if (this._driver !== null) this._driver.close()
-
     if (httpProxy !== '') {
       // let capabilities = new Capabilities(webdriver.Capabilities.chrome())
       // capabilities.setProxy(proxy.socks('davidonly:davidonly@173.44.226.185:80'))
@@ -23,7 +22,7 @@ class LinkedInAccounts {
         .setProxy(proxy.manual({
           http: 'davidonly:davidonly@173.44.226.185:80',
           bypass: 'davidonly:davidonly@173.44.226.185:80'
-          
+
         }))
         .build()
     } else {
