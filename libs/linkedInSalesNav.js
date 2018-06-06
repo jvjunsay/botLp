@@ -9,7 +9,7 @@ class LinkedInSalesNav {
 
   async login (body) {
     let { username, password, httpProxy } = body
-    if (this._driver !== null) this._driver.quit()
+    if (this._driver !== null) this._driver.close()
     if (httpProxy !== '') {
       this._driver = new webdriver.Builder()
         .forBrowser('chrome')
@@ -76,6 +76,38 @@ class LinkedInSalesNav {
     }
   }
 
+  async searchByUrl (body) {
+    let { url, count } = body
+    await this._driver.get(url)
+    common.sleep(2000)
+
+    let data = []
+    data = await this.scrapeResults(data, count)
+
+    return {
+      success: true,
+      data: data
+    }
+  }
+
+  async connect (body) {
+    let { url, message } = body
+    await this._driver.get(url)
+    await common.sleep(2000)
+
+    await this._driver.wait(webdriver.until.elementLocated({xpath: '//*[@id="content-main"]/div[1]/div[1]/div/div[2]/div[1]/div[2]/button'}))
+    await this._driver.findElement({xpath: '//*[@id="content-main"]/div[1]/div[1]/div/div[2]/div[1]/div[2]/button'}).click()
+
+    await this._driver.findElement({className: 'connect'}).click()
+
+    await common.sleep(2000)
+    await this._driver.wait(webdriver.until.elementLocated({xpath: '//*[@id="connect-cta-form__invitation"]'}))
+    await this._driver.findElement({xpath: '//*[@id="connect-cta-form__invitation"]'}).clear()
+    await this._driver.findElement({xpath: '//*[@id="connect-cta-form__invitation"]'}).sendKeys(message)
+    await common.sleep(500)
+    await this._driver.findElement({className: 'connect-cta-form__send'}).click()
+  }
+
   async scrapeResults (data, count) {
     await this._driver.wait(webdriver.until.elementLocated({className: 'result'}))
     let elems = await this._driver.findElements({className: 'result'})
@@ -87,21 +119,27 @@ class LinkedInSalesNav {
     await this._driver.executeScript('window.scrollBy(0,10000)')
     common.sleep(500)
     let counter = 1
+    // if (counter > elems.length) counter = elems.length
     for (let elem of elems) {
-      if (counter !== count) {
+      if (counter !== elems.length) {
         let value = await elem.getText()
         // await elem.wait(webdriver.until.elementLocated({className: 'image-wrapper'}))
         let link = await elem.findElement({className: 'image-wrapper'}).getAttribute('href')
+        link = link.split('?')
         value = value.split('\n')
+        let info = await elem.findElement({className: 'info'}).getText()
+        // console.log(info)
+        info = info.split('\n')
+
         data.push({
-          url: link,
-          currentJob: 'none',
+          url: link[0],
           name: value[0],
-          job: value[4],
-          location: value[3]
+          job: info[0],
+          years: info[1],
+          location: info[2]
         })
         await common.sleep(1000)
-        console.log(data)
+        // console.log(data)
       } else {
         return data
       }

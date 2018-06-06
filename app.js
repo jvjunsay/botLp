@@ -38,6 +38,18 @@ app.post('/searchSalesNav', (req, res) => {
   })
 })
 
+app.post('/searchSalesNavByURL', (req, res) => {
+  linkedinSalesNav.searchByUrl(req.body).then(s => {
+    res.status(200).send(s)
+  })
+})
+
+app.post('/connectSalesNav', (req, res) => {
+  linkedinSalesNav.connect(req.body).then(s => {
+    res.status(200).send(s)
+  })
+})
+
 app.post('/login', (req, res) => {
   linkedin.logIn(req.body).then((s) => {
     res.status(200).send(s)
