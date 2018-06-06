@@ -4,12 +4,13 @@ const proxy = require('selenium-webdriver/proxy')
 
 class LinkedInAccounts {
   constructor () {
-    this._driver = {}
+    this._driver = null
   }
 
   async logIn (body) {
     let { username, password, httpProxy } = body
-
+    if (this._driver !== null) this._driver.close()
+    
     if (httpProxy !== '') {
       this._driver = new webdriver.Builder()
         .forBrowser('chrome')

@@ -3,9 +3,10 @@ const bodyParser = require('body-parser')
 const axios = require('axios').default
 const axiosCookieJarSupport = require('axios-cookiejar-support').default
 const _ = require('lodash')
-const querystring = require('querystring')
 const LinkedInAccount = require('./libs/linkedInAccount')
+const LinkedInSalesNav = require('./libs/linkedInSalesNav')
 const linkedin = new LinkedInAccount()
+const linkedinSalesNav = new LinkedInSalesNav()
 
 axiosCookieJarSupport(axios)
 
@@ -31,8 +32,20 @@ app.post('/search', (req, res) => {
   })
 })
 
+app.post('/searchSalesNav', (req, res) => {
+  linkedinSalesNav.searchkeyWord(req.body).then(s => {
+    res.status(200).send(s)
+  })
+})
+
 app.post('/login', (req, res) => {
   linkedin.logIn(req.body).then((s) => {
+    res.status(200).send(s)
+  })
+})
+
+app.post('/loginSalesNav', (req, res) => {
+  linkedinSalesNav.login(req.body).then(s => {
     res.status(200).send(s)
   })
 })
