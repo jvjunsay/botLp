@@ -91,21 +91,76 @@ class LinkedInSalesNav {
   }
 
   async connect (body) {
-    let { url, message } = body
-    await this._driver.get(url)
-    await common.sleep(2000)
+    let { urls, message } = body
+    let success = []
+    let pending = []
+    let failed = []
+    try {
+      for (let url in urls) {
+        let status = await this.processConnect(urls[url], message)
+        switch (status) {
+          case 'success':
+            success.push(urls[url])
+            break
+          case 'pending':
+            pending.push(urls[url])
+            break
+          case 'failed':
+            failed.push(urls[url])
+            break
+        }
+      }
 
-    await this._driver.wait(webdriver.until.elementLocated({xpath: '//*[@id="content-main"]/div[1]/div[1]/div/div[2]/div[1]/div[2]/button'}))
-    await this._driver.findElement({xpath: '//*[@id="content-main"]/div[1]/div[1]/div/div[2]/div[1]/div[2]/button'}).click()
+      return {
+        success: true,
+        data: {
+          success,
+          pending,
+          failed
+        }
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message
+      }
+    }
+  }
 
-    await this._driver.findElement({className: 'connect'}).click()
+  async processConnect (url, message) {
+    try {
+      await this._driver.get(url)
+      await common.sleep(2000)
 
-    await common.sleep(2000)
-    await this._driver.wait(webdriver.until.elementLocated({xpath: '//*[@id="connect-cta-form__invitation"]'}))
-    await this._driver.findElement({xpath: '//*[@id="connect-cta-form__invitation"]'}).clear()
-    await this._driver.findElement({xpath: '//*[@id="connect-cta-form__invitation"]'}).sendKeys(message)
-    await common.sleep(500)
-    await this._driver.findElement({className: 'connect-cta-form__send'}).click()
+      await this._driver.wait(webdriver.until.elementLocated({xpath: '//*[@id="content-main"]/div[1]/div[1]/div/div[2]/div[1]/div[2]/button'}))
+      await this._driver.findElement({xpath: '//*[@id="content-main"]/div[1]/div[1]/div/div[2]/div[1]/div[2]/button'}).click()
+
+      let pending = await this._driver.findElement({className: 'pending-connection'})
+        .then(() => { return true }, (err) => {
+          if (err instanceof webdriver.error.NoSuchElementError) {
+            return false// it was not found
+          } else {
+            webdriver.promise.rejected(err)
+          }
+        })
+
+      if (pending) {
+        return 'pending'
+      }
+
+      await this._driver.findElement({className: 'connect'}).click()
+      await common.sleep(2000)
+
+      await this._driver.wait(webdriver.until.elementLocated({xpath: '//*[@id="connect-cta-form__invitation"]'}))
+      await this._driver.findElement({xpath: '//*[@id="connect-cta-form__invitation"]'}).clear()
+      await this._driver.findElement({xpath: '//*[@id="connect-cta-form__invitation"]'}).sendKeys(message)
+      await common.sleep(500)
+      await this._driver.findElement({className: 'connect-cta-form__send'}).click()
+
+      return 'success'
+    } catch (error) {
+      return 'failed'
+    }
   }
 
   async scrapeResults (data, count) {
